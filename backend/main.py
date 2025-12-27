@@ -782,6 +782,125 @@ def health_check():
         "timestamp": datetime.utcnow().isoformat()
     }
 
+@app.get("/api/admin/seed-database")
+def manual_seed(db: Session = Depends(get_db)):
+    """Manually seed the database with demo data"""
+    try:
+        # Check if demo user exists
+        existing_user = db.query(User).filter(User.email == "admin@example.com").first()
+        if existing_user:
+            return {
+                "status": "already_exists",
+                "message": "Demo user already exists!",
+                "email": "admin@example.com",
+                "password": "password123"
+            }
+        
+        print("🌱 Creating demo user...")
+        
+        # Create demo user
+        demo_user = User(
+            email="admin@example.com",
+            full_name="Demo Admin",
+            hashed_password=get_password_hash("password123"),
+            role="admin",
+            leads_assigned=45,
+            leads_contacted=38,
+            deals_closed=12,
+            revenue_generated=145000.00
+        )
+        db.add(demo_user)
+        
+        # Create 5 demo leads
+        demo_leads = [
+            {
+                "business_name": "Tech Solutions Inc",
+                "phone": "+1 (555) 123-4567",
+                "email": "contact@techsolutions.com",
+                "website": "https://techsolutions.com",
+                "address": "123 Tech Street, San Francisco, CA",
+                "rating": 4.8,
+                "reviews_count": 245,
+                "category": "Software Development",
+                "search_query": "software companies",
+                "maps_url": "https://maps.google.com/?cid=1001"
+            },
+            {
+                "business_name": "Digital Marketing Pro",
+                "phone": "+1 (555) 234-5678",
+                "email": "hello@digitalmarketingpro.com",
+                "website": "https://digitalmarketingpro.com",
+                "address": "456 Marketing Ave, New York, NY",
+                "rating": 4.6,
+                "reviews_count": 189,
+                "category": "Marketing Agency",
+                "search_query": "marketing agencies",
+                "maps_url": "https://maps.google.com/?cid=1002"
+            },
+            {
+                "business_name": "Cloud Services Plus",
+                "phone": "+1 (555) 345-6789",
+                "website": "https://cloudservicesplus.com",
+                "address": "789 Cloud Blvd, Seattle, WA",
+                "rating": 4.9,
+                "reviews_count": 312,
+                "category": "Cloud Computing",
+                "search_query": "cloud services",
+                "maps_url": "https://maps.google.com/?cid=1003"
+            },
+            {
+                "business_name": "E-commerce Experts",
+                "phone": "+1 (555) 456-7890",
+                "email": "support@ecommerceexperts.com",
+                "address": "321 Commerce St, Austin, TX",
+                "rating": 4.3,
+                "reviews_count": 87,
+                "category": "E-commerce",
+                "search_query": "ecommerce companies",
+                "maps_url": "https://maps.google.com/?cid=1004"
+            },
+            {
+                "business_name": "Data Analytics Corp",
+                "email": "info@dataanalytics.com",
+                "website": "https://dataanalytics.com",
+                "address": "555 Data Drive, Boston, MA",
+                "rating": 4.7,
+                "reviews_count": 156,
+                "category": "Data Analytics",
+                "search_query": "data analytics",
+                "maps_url": "https://maps.google.com/?cid=1005"
+            }
+        ]
+        
+        for lead_data in demo_leads:
+            scores = calculate_ai_score(lead_data)
+            lead = Lead(
+                unique_fingerprint=f"{lead_data['business_name'].lower().replace(' ', '_')}",
+                **lead_data,
+                **scores
+            )
+            db.add(lead)
+        
+        db.commit()
+        
+        print("✅ Demo data created successfully!")
+        
+        return {
+            "status": "success",
+            "message": "✅ Database seeded successfully!",
+            "demo_user": {
+                "email": "admin@example.com",
+                "password": "password123"
+            },
+            "leads_created": len(demo_leads),
+            "next_step": "Try logging in with admin@example.com / password123"
+        }
+    
+    except Exception as e:
+        db.rollback()
+        print(f"❌ Seeding failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Seeding failed: {str(e)}")
+
 
 if __name__ == "__main__":
     import uvicorn
