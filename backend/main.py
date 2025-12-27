@@ -440,6 +440,26 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Seed database
+    print("🚀 Application starting up...")
+    db = SessionLocal()
+    try:
+        print("🌱 Attempting to seed database...")
+        seed_data(db)
+        print("✅ Seeding completed (or user already exists)")
+    except Exception as e:
+        print(f"⚠️  Seeding failed: {str(e)}")
+        print(f"   You can manually seed by visiting: /api/admin/seed-database")
+    finally:
+        db.close()
+    
+    yield
+    
+    # Shutdown: Cleanup if needed
+    print("👋 Application shutting down...")
+
 
 # Enhanced CORS configuration
 app.add_middleware(
