@@ -53,7 +53,7 @@ class APIService {
 
   // ==================== AUTH API ====================
   async login(data: LoginData): Promise<AuthResponse> {
-    const response = await this.client.post<AuthResponse>('/auth/login', data);
+    const response = await this.client.post<AuthResponse>('/api/auth/login', data);
     return response.data;
   }
 
