@@ -24,7 +24,7 @@ class APIService {
 
   constructor() {
     this.client = axios.create({
-      baseURL: `${API_URL}/api`,
+      baseURL: `${API_URL}api`,
       headers: {
         'Content-Type': 'application/json',
       },
