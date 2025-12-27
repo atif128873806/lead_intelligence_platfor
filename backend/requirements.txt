@@ -1,0 +1,23 @@
+# FastAPI Backend Requirements - Enhanced
+# Lead Intelligence Platform
+# Updated for Python 3.13 compatibility
+
+# Core Framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+python-multipart>=0.0.12
+
+# Database
+sqlalchemy>=2.0.36
+alembic>=1.13.0
+psycopg2-binary>=2.9.0  # PostgreSQL adapter for Railway/Heroku
+
+# Authentication & Security
+python-jose[cryptography]>=3.3.0
+bcrypt>=4.0.0
+python-dotenv>=1.0.0
+pydantic[email]>=2.9.0
+PyJWT>=2.8.0
+
+# Additional utilities
+python-dateutil>=2.9.0
