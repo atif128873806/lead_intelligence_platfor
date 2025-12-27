@@ -1,0 +1,21 @@
+# Backend ignores
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+.env
+.venv
+*.db
+*.sqlite3
+
+# Frontend ignores
+node_modules/
+dist/
+.env.local
+
+# General
+.DS_Store
+*.log
