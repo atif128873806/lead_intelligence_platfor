@@ -111,6 +111,16 @@ class APIService {
     return response.data;
   }
 
+  async updateCampaign(id: number, data: Partial<Campaign>) {
+  const response = await this.client.put(`/campaigns/${id}`, data);
+  return response.data;
+}
+
+async deleteCampaign(id: number) {
+  const response = await this.client.delete(`/campaigns/${id}`);
+  return response.data;
+}
+
   // ==================== DASHBOARD API ====================
   async getDashboardStats(): Promise<DashboardStats> {
     const response = await this.client.get<DashboardStats>('/dashboard/stats');
