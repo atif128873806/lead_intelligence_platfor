@@ -10,6 +10,7 @@ import Campaigns from '@/pages/Campaigns';
 import Analytics from '@/pages/Analytics';
 import Settings from '@/pages/Settings';
 import Login from '@/pages/Login';
+import CreateLead from '@/pages/CreateLead_COMPLETE';
 
 // Components
 import Layout from '@/components/Layout';
@@ -49,6 +50,7 @@ function App() {
             <Route element={<Layout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/leads" element={<Leads />} />
+              <Route path="/leads/create" element={<CreateLead />} /> 
               <Route path="/leads/:id" element={<LeadDetail />} />
               <Route path="/campaigns" element={<Campaigns />} />
               <Route path="/analytics" element={<Analytics />} />

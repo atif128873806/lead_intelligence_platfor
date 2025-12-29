@@ -24,6 +24,7 @@ import {
 import { Line, Doughnut, Bar } from 'react-chartjs-2';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api';
+import { Link } from 'react-router-dom';
 
 // Register ChartJS components
 ChartJS.register(
@@ -77,16 +78,16 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon, color, 
       variants={itemVariants}
       whileHover={{ scale: 1.02, y: -5 }}
       whileTap={{ scale: 0.98 }}
-      className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-xl border border-gray-700 hover:border-gray-600 transition-all"
+      className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-4 sm:p-6 shadow-xl border border-gray-700 hover:border-gray-600 transition-all"
     >
       <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-gray-400 text-sm font-medium mb-1">{title}</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-gray-400 text-xs sm:text-sm font-medium mb-1 truncate">{title}</p>
           <motion.h3
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: delay + 0.2, type: 'spring' }}
-            className="text-3xl font-bold text-white mb-2"
+            className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2 truncate"
           >
             {value}
           </motion.h3>
@@ -95,10 +96,10 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon, color, 
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: delay + 0.3 }}
-              className="text-sm text-green-400 flex items-center"
+              className="text-xs sm:text-sm text-green-400 flex items-center"
             >
-              <ArrowTrendingUpIcon className="w-4 h-4 mr-1" />
-              {change}
+              <ArrowTrendingUpIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
+              <span className="truncate">{change}</span>
             </motion.p>
           )}
         </div>
@@ -106,9 +107,11 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon, color, 
           initial={{ rotate: -180, scale: 0 }}
           animate={{ rotate: 0, scale: 1 }}
           transition={{ delay: delay, type: 'spring' }}
-          className={`p-4 rounded-xl ${color}`}
+          className={`p-3 sm:p-4 rounded-xl ${color} flex-shrink-0 ml-2`}
         >
-          {icon}
+          <div className="w-6 h-6 sm:w-8 sm:h-8">
+            {icon}
+          </div>
         </motion.div>
       </div>
     </motion.div>
@@ -161,7 +164,7 @@ const Dashboard: React.FC = () => {
   };
 
   const timelineChartData = {
-    labels: timelineData?.map((d: any) => new Date(d.date).toLocaleDateString()) || [],
+    labels: timelineData?.map((d: any) => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) || [],
     datasets: [
       {
         label: 'New Leads',
@@ -225,6 +228,9 @@ const Dashboard: React.FC = () => {
         },
         ticks: {
           color: 'rgba(255, 255, 255, 0.5)',
+          font: {
+            size: window.innerWidth < 640 ? 10 : 12,
+          },
         },
       },
       x: {
@@ -233,6 +239,11 @@ const Dashboard: React.FC = () => {
         },
         ticks: {
           color: 'rgba(255, 255, 255, 0.5)',
+          font: {
+            size: window.innerWidth < 640 ? 10 : 12,
+          },
+          maxRotation: 45,
+          minRotation: 45,
         },
       },
     },
@@ -246,9 +257,9 @@ const Dashboard: React.FC = () => {
         position: 'bottom' as const,
         labels: {
           color: 'rgba(255, 255, 255, 0.8)',
-          padding: 20,
+          padding: window.innerWidth < 640 ? 10 : 20,
           font: {
-            size: 12,
+            size: window.innerWidth < 640 ? 10 : 12,
           },
         },
       },
@@ -265,35 +276,37 @@ const Dashboard: React.FC = () => {
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full"
+          className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-indigo-500 border-t-transparent rounded-full"
         />
       </div>
     );
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        <div>
-          <h1 className="text-4xl font-bold text-white mb-2 flex items-center">
-            <SparklesIcon className="w-10 h-10 text-indigo-500 mr-3" />
-            Lead Intelligence Dashboard
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 flex items-center">
+            <SparklesIcon className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-indigo-500 mr-2 sm:mr-3 flex-shrink-0" />
+            <span className="truncate">Lead Intelligence</span>
           </h1>
-          <p className="text-gray-400">Real-time insights powered by AI</p>
+          <p className="text-sm sm:text-base text-gray-400">Real-time insights powered by AI</p>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center"
-        >
-          <RocketLaunchIcon className="w-5 h-5 mr-2" />
-          New Campaign
-        </motion.button>
+        <Link to="/campaigns">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center text-sm sm:text-base"
+          >
+            <RocketLaunchIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+            New Campaign
+          </motion.button>
+        </Link>
       </motion.div>
 
       {/* Stats Grid */}
@@ -301,13 +314,13 @@ const Dashboard: React.FC = () => {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
       >
         <StatCard
           title="Total Leads"
           value={stats?.total_leads?.toLocaleString() || '0'}
           change="+12% from last month"
-          icon={<UserGroupIcon className="w-8 h-8 text-white" />}
+          icon={<UserGroupIcon className="w-full h-full text-white" />}
           color="bg-gradient-to-br from-indigo-500 to-indigo-600"
           delay={0}
         />
@@ -315,7 +328,7 @@ const Dashboard: React.FC = () => {
           title="New Today"
           value={stats?.new_today?.toLocaleString() || '0'}
           change="+23% from yesterday"
-          icon={<ArrowTrendingUpIcon className="w-8 h-8 text-white" />}
+          icon={<ArrowTrendingUpIcon className="w-full h-full text-white" />}
           color="bg-gradient-to-br from-green-500 to-green-600"
           delay={0.1}
         />
@@ -323,15 +336,15 @@ const Dashboard: React.FC = () => {
           title="Hot Leads"
           value={stats?.hot_leads?.toLocaleString() || '0'}
           change={`${stats?.hot_leads && stats?.total_leads ? ((stats.hot_leads / stats.total_leads) * 100).toFixed(1) : '0'}% of total`}
-          icon={<SparklesIcon className="w-8 h-8 text-white" />}
+          icon={<SparklesIcon className="w-full h-full text-white" />}
           color="bg-gradient-to-br from-red-500 to-red-600"
           delay={0.2}
         />
         <StatCard
           title="Revenue Potential"
           value={stats?.revenue_potential || '$0'}
-          change={`${stats?.conversion_rate}% conversion rate`}
-          icon={<CurrencyDollarIcon className="w-8 h-8 text-white" />}
+          change={`${stats?.conversion_rate}% conversion`}
+          icon={<CurrencyDollarIcon className="w-full h-full text-white" />}
           color="bg-gradient-to-br from-yellow-500 to-yellow-600"
           delay={0.3}
         />
@@ -342,22 +355,22 @@ const Dashboard: React.FC = () => {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6"
       >
         {/* Timeline Chart */}
         <motion.div
           variants={itemVariants}
           whileHover={{ y: -5 }}
-          className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-xl border border-gray-700"
+          className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-4 sm:p-6 shadow-xl border border-gray-700"
         >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white flex items-center">
-              <ChartBarIcon className="w-6 h-6 text-indigo-500 mr-2" />
-              Lead Generation Timeline
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-2">
+            <h2 className="text-base sm:text-lg lg:text-xl font-bold text-white flex items-center">
+              <ChartBarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500 mr-2 flex-shrink-0" />
+              <span className="truncate">Lead Timeline</span>
             </h2>
-            <span className="text-sm text-gray-400">Last 30 days</span>
+            <span className="text-xs sm:text-sm text-gray-400">Last 30 days</span>
           </div>
-          <div className="h-64">
+          <div className="h-48 sm:h-56 lg:h-64">
             <Line data={timelineChartData} options={chartOptions} />
           </div>
         </motion.div>
@@ -366,15 +379,15 @@ const Dashboard: React.FC = () => {
         <motion.div
           variants={itemVariants}
           whileHover={{ y: -5 }}
-          className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-xl border border-gray-700"
+          className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-4 sm:p-6 shadow-xl border border-gray-700"
         >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white flex items-center">
-              <SparklesIcon className="w-6 h-6 text-yellow-500 mr-2" />
-              Lead Priority Distribution
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-2">
+            <h2 className="text-base sm:text-lg lg:text-xl font-bold text-white flex items-center">
+              <SparklesIcon className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500 mr-2 flex-shrink-0" />
+              <span className="truncate">Priority Distribution</span>
             </h2>
           </div>
-          <div className="h-64">
+          <div className="h-48 sm:h-56 lg:h-64">
             <Doughnut data={priorityChartData} options={doughnutOptions} />
           </div>
         </motion.div>
@@ -383,18 +396,18 @@ const Dashboard: React.FC = () => {
         <motion.div
           variants={itemVariants}
           whileHover={{ y: -5 }}
-          className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-xl border border-gray-700 lg:col-span-2"
+          className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-4 sm:p-6 shadow-xl border border-gray-700 lg:col-span-2"
         >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white flex items-center">
-              <ArrowTrendingUpIcon className="w-6 h-6 text-green-500 mr-2" />
-              Data Quality Distribution
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-2">
+            <h2 className="text-base sm:text-lg lg:text-xl font-bold text-white flex items-center">
+              <ArrowTrendingUpIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-500 mr-2 flex-shrink-0" />
+              <span className="truncate">Data Quality</span>
             </h2>
-            <span className="text-sm text-gray-400">
-              Avg Score: {stats?.avg_quality_score}/100
+            <span className="text-xs sm:text-sm text-gray-400">
+              Avg: {stats?.avg_quality_score}/100
             </span>
           </div>
-          <div className="h-64">
+          <div className="h-48 sm:h-56 lg:h-64">
             <Bar data={qualityChartData} options={chartOptions} />
           </div>
         </motion.div>
@@ -405,10 +418,10 @@ const Dashboard: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-xl border border-gray-700"
+        className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-4 sm:p-6 shadow-xl border border-gray-700"
       >
-        <h2 className="text-xl font-bold text-white mb-4">Recent Activity</h2>
-        <div className="space-y-3">
+        <h2 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">Recent Activity</h2>
+        <div className="space-y-2 sm:space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
             <motion.div
               key={i}
@@ -416,18 +429,18 @@ const Dashboard: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.6 + i * 0.1 }}
               whileHover={{ x: 5, backgroundColor: 'rgba(99, 102, 241, 0.1)' }}
-              className="flex items-center justify-between p-4 rounded-xl border border-gray-700 hover:border-indigo-500 transition-all cursor-pointer"
+              className="flex items-center justify-between p-3 sm:p-4 rounded-xl border border-gray-700 hover:border-indigo-500 transition-all cursor-pointer"
             >
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold mr-4">
+              <div className="flex items-center min-w-0 flex-1">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold mr-3 sm:mr-4 text-sm sm:text-base flex-shrink-0">
                   {i}
                 </div>
-                <div>
-                  <p className="text-white font-medium">New lead added</p>
-                  <p className="text-gray-400 text-sm">Business Name #{i}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm sm:text-base text-white font-medium truncate">New lead added</p>
+                  <p className="text-xs sm:text-sm text-gray-400 truncate">Business Name #{i}</p>
                 </div>
               </div>
-              <span className="text-gray-400 text-sm">2 min ago</span>
+              <span className="text-xs sm:text-sm text-gray-400 ml-2 flex-shrink-0">2m ago</span>
             </motion.div>
           ))}
         </div>
