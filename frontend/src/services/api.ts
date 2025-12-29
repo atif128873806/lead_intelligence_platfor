@@ -95,23 +95,24 @@ class APIService {
     return response.data;
   }
 
-  // ==================== CAMPAIGNS API ====================
-  async getCampaigns(): Promise<Campaign[]> {
-    const response = await this.client.get<Campaign[]>('/campaigns');
-    return response.data;
-  }
+  // ==================== CAMPAIGNS API ====================// ==================== CAMPAIGNS ====================
 
-  async getCampaign(id: number): Promise<Campaign> {
-    const response = await this.client.get<Campaign>(`/campaigns/${id}`);
-    return response.data;
-  }
+async getCampaigns() {
+  const response = await this.client.get('/campaigns');
+  return response.data;
+}
 
-  async createCampaign(data: CreateCampaignData): Promise<Campaign> {
-    const response = await this.client.post<Campaign>('/campaigns', data);
-    return response.data;
-  }
+async getCampaign(id: number) {
+  const response = await this.client.get(`/campaigns/${id}`);
+  return response.data;
+}
 
-  async updateCampaign(id: number, data: Partial<Campaign>) {
+async createCampaign(data: CreateCampaignData) {
+  const response = await this.client.post('/campaigns', data);
+  return response.data;
+}
+
+async updateCampaign(id: number, data: Partial<Campaign>) {
   const response = await this.client.put(`/campaigns/${id}`, data);
   return response.data;
 }
