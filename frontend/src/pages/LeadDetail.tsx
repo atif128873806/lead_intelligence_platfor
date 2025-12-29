@@ -10,7 +10,7 @@ import {
     EnvelopeIcon,
     GlobeAltIcon,
     MapPinIcon,
-    StarIcon,
+    // StarIcon,
     FireIcon,
     PencilIcon,
     CheckIcon,

@@ -8,7 +8,7 @@ import {
     FunnelIcon,
     PlusIcon,
     EyeIcon,
-    PencilIcon,
+    // PencilIcon,
     TrashIcon,
     StarIcon,
     BuildingOfficeIcon,
