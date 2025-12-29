@@ -718,7 +718,7 @@ def create_lead(
 @app.get("/api/campaigns", response_model=List[CampaignResponse])
 def get_campaigns(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    # current_user: User = Depends(get_current_user)
 ):
     """Get all campaigns"""
     campaigns = db.query(Campaign).order_by(Campaign.created_at.desc()).all()
@@ -729,7 +729,7 @@ def get_campaigns(
 def get_campaign(
     campaign_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    # current_user: User = Depends(get_current_user)
 ):
     """Get a specific campaign"""
     campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
@@ -742,7 +742,7 @@ def get_campaign(
 def create_campaign(
     campaign_data: CampaignCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    # current_user: User = Depends(get_current_user)
 ):
     """Create a new campaign"""
     campaign = Campaign(
@@ -767,7 +767,7 @@ def update_campaign(
     campaign_id: int,
     campaign_data: CampaignUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    # current_user: User = Depends(get_current_user)
 ):
     """Update a campaign"""
     campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
@@ -793,7 +793,7 @@ def update_campaign(
 def delete_campaign(
     campaign_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    # current_user: User = Depends(get_current_user)
 ):
     """Delete a campaign"""
     campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
