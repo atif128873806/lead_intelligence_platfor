@@ -272,6 +272,29 @@ class DashboardStats(BaseModel):
     active_campaigns: int
     avg_quality_score: float
 
+class CampaignCreate(BaseModel):
+    name: str
+    search_query: str
+
+class CampaignUpdate(BaseModel):
+    name: Optional[str] = None
+    search_query: Optional[str] = None
+    status: Optional[str] = None
+
+class CampaignResponse(BaseModel):
+    id: int
+    name: str
+    search_query: Optional[str]
+    status: str
+    total_leads: int
+    new_leads: int
+    duplicate_leads: int
+    hot_leads: int
+    created_at: datetime
+    completed_at: Optional[datetime]
+    
+    model_config = ConfigDict(from_attributes=True)
+
 
 # ==================== SECURITY ====================
 
@@ -690,7 +713,97 @@ def create_lead(
     
     return lead
 
+# ==================== CAMPAIGN ENDPOINTS ====================
 
+@app.get("/api/campaigns", response_model=List[CampaignResponse])
+def get_campaigns(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all campaigns"""
+    campaigns = db.query(Campaign).order_by(Campaign.created_at.desc()).all()
+    return campaigns
+
+
+@app.get("/api/campaigns/{campaign_id}", response_model=CampaignResponse)
+def get_campaign(
+    campaign_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get a specific campaign"""
+    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    return campaign
+
+
+@app.post("/api/campaigns", response_model=CampaignResponse, status_code=status.HTTP_201_CREATED)
+def create_campaign(
+    campaign_data: CampaignCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new campaign"""
+    campaign = Campaign(
+        name=campaign_data.name,
+        search_query=campaign_data.search_query,
+        status="active",
+        total_leads=0,
+        new_leads=0,
+        duplicate_leads=0,
+        hot_leads=0
+    )
+    
+    db.add(campaign)
+    db.commit()
+    db.refresh(campaign)
+    
+    return campaign
+
+
+@app.put("/api/campaigns/{campaign_id}", response_model=CampaignResponse)
+def update_campaign(
+    campaign_id: int,
+    campaign_data: CampaignUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update a campaign"""
+    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    
+    if campaign_data.name is not None:
+        campaign.name = campaign_data.name
+    if campaign_data.search_query is not None:
+        campaign.search_query = campaign_data.search_query
+    if campaign_data.status is not None:
+        campaign.status = campaign_data.status
+        if campaign_data.status == "completed":
+            campaign.completed_at = datetime.utcnow()
+    
+    db.commit()
+    db.refresh(campaign)
+    
+    return campaign
+
+
+@app.delete("/api/campaigns/{campaign_id}")
+def delete_campaign(
+    campaign_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a campaign"""
+    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    
+    db.delete(campaign)
+    db.commit()
+    
+    return {"message": "Campaign deleted successfully"}
 # ==================== DASHBOARD ENDPOINTS ====================
 
 @app.get("/api/dashboard/stats", response_model=DashboardStats)
