@@ -55,7 +55,7 @@ const createMutation = useMutation({
       await refetch();
     }, 300);
     
-    toast.success('Campaign created successfully');
+    toast.success(`Campaign "${newCampaign.name}" created successfully`);
     setShowCreateModal(false);
     setNewCampaign({ name: '', search_query: '' });
   },
