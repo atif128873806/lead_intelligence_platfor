@@ -47,7 +47,6 @@ const Campaigns: React.FC = () => {
   console.log('🔍 Campaigns raw data:', campaigns);
   console.log('🔍 Is loading:', isLoading);
   console.log('🔍 Campaigns count:', campaigns?.length);
-//   console.log('🔍 Filtered campaigns:', filteredCampaigns);
   console.log('🔍 Search query:', searchQuery);
   console.log('🔍 Status filter:', statusFilter);
 
@@ -169,12 +168,20 @@ const createMutation = useMutation({
     };
 
     // Filter campaigns
-    const filteredCampaigns = campaigns?.filter((campaign: Campaign) => {
-        const matchesSearch = campaign.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            campaign.search_query?.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesStatus = statusFilter === 'all' || campaign.status === statusFilter;
-        return matchesSearch && matchesStatus;
-    });
+   const filteredCampaigns = campaigns?.filter((campaign: Campaign) => {
+  // Search filter
+  const matchesSearch = !searchQuery || 
+    campaign.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    campaign.search_query?.toLowerCase().includes(searchQuery.toLowerCase());
+  
+  // Status filter
+  const matchesStatus = statusFilter === 'all' || campaign.status === statusFilter;
+  
+  return matchesSearch && matchesStatus;
+});
+
+console.log('🔍 Filtered campaigns:', filteredCampaigns);
+console.log('🔍 Filtered count:', filteredCampaigns?.length);
 
     // Calculate stats
     const stats = {
