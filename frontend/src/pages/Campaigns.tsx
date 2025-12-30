@@ -44,18 +44,22 @@ const Campaigns: React.FC = () => {
     });
 
     // Create campaign mutation
-    const createMutation = useMutation({
-        mutationFn: (data: CreateCampaignData) => api.createCampaign(data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['campaigns'] });
-            toast.success('Campaign created successfully');
-            setShowCreateModal(false);
-            setNewCampaign({ name: '', search_query: '' });
-        },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.detail || 'Failed to create campaign');
-        },
-    });
+const createMutation = useMutation({
+  mutationFn: (data: CreateCampaignData) => api.createCampaign(data),
+  onSuccess: async (newCampaign) => {
+    // Invalidate cache
+    queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+    
+    // Wait 300ms then refetch
+    setTimeout(async () => {
+      await refetch();
+    }, 300);
+    
+    toast.success('Campaign created successfully');
+    setShowCreateModal(false);
+    setNewCampaign({ name: '', search_query: '' });
+  },
+});
 
     // Update campaign mutation
     const updateMutation = useMutation({
