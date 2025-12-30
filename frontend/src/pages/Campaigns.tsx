@@ -43,6 +43,14 @@ const Campaigns: React.FC = () => {
         queryFn: api.getCampaigns,
     });
 
+      // 🔍 ADD THESE DEBUG LOGS:
+  console.log('🔍 Campaigns raw data:', campaigns);
+  console.log('🔍 Is loading:', isLoading);
+  console.log('🔍 Campaigns count:', campaigns?.length);
+//   console.log('🔍 Filtered campaigns:', filteredCampaigns);
+  console.log('🔍 Search query:', searchQuery);
+  console.log('🔍 Status filter:', statusFilter);
+
     // Create campaign mutation
 const createMutation = useMutation({
   mutationFn: (data: CreateCampaignData) => api.createCampaign(data),
