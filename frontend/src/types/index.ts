@@ -54,21 +54,19 @@ export interface Lead {
 export interface Campaign {
   id: number;
   name: string;
-  search_query: string;
+  search_query?: string | null;
   status: 'active' | 'paused' | 'completed';
-  
-  // Stats
   total_leads: number;
   new_leads: number;
   duplicate_leads: number;
   hot_leads: number;
-  
-  // Timestamps
   created_at: string;
-  completed_at?: string;
-  
-  // Settings
-  settings?: Record<string, any>;
+  completed_at?: string | null;
+}
+
+export interface CreateCampaignData {
+  name: string;
+  search_query: string;
 }
 
 export interface DashboardStats {

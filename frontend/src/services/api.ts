@@ -101,8 +101,18 @@ class APIService {
   // ==================== CAMPAIGNS API ====================// ==================== CAMPAIGNS ====================
 
 async getCampaigns() {
-  const response = await this.client.get('/campaigns');
-  return response.data;
+  try {
+    console.log('🔍 Calling GET /api/campaigns...');
+    const response = await this.client.get('/api/campaigns');
+    console.log('🔍 Response:', response);
+    console.log('🔍 Response data:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ getCampaigns error:', error);
+    throw error;
+  }
+  // const response = await this.client.get('/campaigns');
+  // return response.data;
 }
 
 async getCampaign(id: number) {
