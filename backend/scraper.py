@@ -47,9 +47,11 @@ class GoogleMapsScraper:
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--disable-gpu')
         
-        # Try to set binary location for Railway (will be ignored locally if not found)
+        # Detect if we're on Railway or local environment
         import os
-        if os.path.exists('/usr/bin/chromium'):
+        is_railway = os.path.exists('/usr/bin/chromium')
+        
+        if is_railway:
             chrome_options.binary_location = '/usr/bin/chromium'
             logger.info("Using Railway Chromium binary")
         
@@ -62,7 +64,15 @@ class GoogleMapsScraper:
         chrome_options.add_experimental_option('useAutomationExtension', False)
         
         try:
-            service = Service(ChromeDriverManager().install())
+            if is_railway:
+                # On Railway, use system-installed chromedriver
+                service = Service('/usr/bin/chromedriver')
+                logger.info("Using Railway system chromedriver")
+            else:
+                # Locally, use ChromeDriverManager to auto-download
+                service = Service(ChromeDriverManager().install())
+                logger.info("Using ChromeDriverManager for local development")
+            
             self.driver = webdriver.Chrome(service=service, options=chrome_options)
             self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             logger.info("Chrome driver initialized successfully")
