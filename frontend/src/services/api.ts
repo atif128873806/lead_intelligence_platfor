@@ -28,7 +28,10 @@ class APIService {
       headers: {
         'Content-Type': 'application/json',
       },
+      withCredentials: true,
     });
+    
+
 
     // Add auth token to requests
     this.client.interceptors.request.use((config) => {
