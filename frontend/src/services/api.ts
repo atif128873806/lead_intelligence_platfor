@@ -57,43 +57,43 @@ class APIService {
   }
 
   // ==================== AUTH API ====================
-  async login(data: LoginData): Promise<AuthResponse> {
+login = async (data: LoginData): Promise<AuthResponse> =>{
     const response = await this.client.post<AuthResponse>('/auth/login', data);
     return response.data;
   }
 
-  async register(data: RegisterData): Promise<AuthResponse> {
+register = async (data: RegisterData): Promise<AuthResponse> =>{
     const response = await this.client.post<AuthResponse>('/auth/register', data);
     return response.data;
   }
 
-  async getMe(): Promise<User> {
+getMe = async (): Promise<User> => {
     const response = await this.client.get<User>('/auth/me');
     return response.data;
   }
 
   // ==================== LEADS API ====================
-  async getLeads(filters?: LeadFilters): Promise<Lead[]> {
+getLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
     const response = await this.client.get<Lead[]>('/leads', { params: filters });
     return response.data;
   }
 
-  async getLead(id: number): Promise<Lead> {
+getLead = async (id: number): Promise<Lead> => {
     const response = await this.client.get<Lead>(`/leads/${id}`);
     return response.data;
   }
 
-  async createLead(data: CreateLeadData): Promise<Lead> {
+createLead = async (data: CreateLeadData): Promise<Lead> => {
     const response = await this.client.post<Lead>('/leads', data);
     return response.data;
   }
 
-  async updateLead(id: number, data: UpdateLeadData): Promise<Lead> {
+updateLead = async (id: number, data: UpdateLeadData): Promise<Lead> => {
     const response = await this.client.put<Lead>(`/leads/${id}`, data);
     return response.data;
   }
 
-  async deleteLead(id: number): Promise<{ message: string }> {
+deleteLead = async (id: number): Promise<{ message: string }> => {
     const response = await this.client.delete<{ message: string }>(`/leads/${id}`);
     return response.data;
   }
@@ -135,19 +135,19 @@ deleteCampaign = async (id: number) =>{
 }
 
   // ==================== DASHBOARD API ====================
-  async getDashboardStats(): Promise<DashboardStats> {
+getDashboardStats = async (): Promise<DashboardStats> => {
     const response = await this.client.get<DashboardStats>('/dashboard/stats');
     return response.data;
   }
 
-  async getLeadsByPriority(): Promise<Array<{ priority: string; count: number }>> {
+getLeadsByPriority = async (): Promise<Array<{ priority: string; count: number }>> => {
     const response = await this.client.get<Array<{ priority: string; count: number }>>(
       '/dashboard/charts/leads-by-priority'
     );
     return response.data;
   }
 
-  async getLeadsTimeline(days = 30): Promise<Array<{ date: string; count: number }>> {
+getLeadsTimeline = async (days = 30): Promise<Array<{ date: string; count: number }>> => {
     const response = await this.client.get<Array<{ date: string; count: number }>>(
       '/dashboard/charts/leads-timeline',
       { params: { days } }
@@ -155,7 +155,7 @@ deleteCampaign = async (id: number) =>{
     return response.data;
   }
 
-  async getQualityDistribution(): Promise<Array<{ range: string; count: number }>> {
+getQualityDistribution = async (): Promise<Array<{ range: string; count: number }>> => {
     const response = await this.client.get<Array<{ range: string; count: number }>>(
       '/dashboard/charts/quality-distribution'
     );
