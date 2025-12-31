@@ -1,11 +1,10 @@
 """
-Google Maps Lead Scraper - Railway Compatible
+Google Maps Lead Scraper
 Complete scraper for extracting business information from Google Maps
 """
 
 import time
 import re
-import os
 from typing import List, Dict, Optional
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -13,6 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+# from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import logging
 
@@ -42,7 +42,7 @@ class GoogleMapsScraper:
         chrome_options = Options()
         
         if self.headless:
-            chrome_options.add_argument('--headless=new')
+            chrome_options.add_argument('--headless')
         
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
@@ -55,58 +55,12 @@ class GoogleMapsScraper:
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
         
-        # Railway/Production specific settings
-        chrome_options.add_argument('--disable-extensions')
-        chrome_options.add_argument('--disable-software-rasterizer')
-        
         try:
-            # Try different Chrome/Chromium paths
-            chrome_paths = [
-                '/usr/bin/chromium',           # Railway/Debian
-                '/usr/bin/chromium-browser',   # Ubuntu
-                '/usr/bin/google-chrome',      # Google Chrome
-                'chromium',                     # System PATH
-            ]
-            
-            chrome_binary = None
-            for path in chrome_paths:
-                if os.path.exists(path):
-                    chrome_binary = path
-                    logger.info(f"Found Chrome at: {path}")
-                    break
-            
-            if chrome_binary:
-                chrome_options.binary_location = chrome_binary
-            else:
-                logger.warning("Chrome binary not found at standard paths, using system default")
-            
-            # Try to use ChromeDriver from system PATH first (Railway has it)
-            chromedriver_path = None
-            possible_drivers = [
-                '/usr/bin/chromedriver',
-                'chromedriver'
-            ]
-            
-            for path in possible_drivers:
-                if os.path.exists(path):
-                    chromedriver_path = path
-                    logger.info(f"Found ChromeDriver at: {path}")
-                    break
-            
-            if chromedriver_path:
-                service = Service(chromedriver_path)
-                self.driver = webdriver.Chrome(service=service, options=chrome_options)
-            else:
-                # Fallback to webdriver-manager (local development)
-                from webdriver_manager.chrome import ChromeDriverManager
-                service = Service(ChromeDriverManager().install())
-                self.driver = webdriver.Chrome(service=service, options=chrome_options)
-            
+            service = Service("/usr/bin/chromedriver")
+            self.driver = webdriver.Chrome(service=service, options=chrome_options)
             self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             logger.info("Chrome driver initialized successfully")
-            
         except Exception as e:
-            logger.error(f"Failed to initialize Chrome driver: {str(e)}")
             raise GoogleMapsScraperError(f"Failed to initialize Chrome driver: {str(e)}")
     
     def search(self, query: str, location: str = "", max_results: int = 20) -> List[Dict]:
@@ -368,7 +322,7 @@ if __name__ == "__main__":
         query="restaurants",
         location="New York",
         max_results=10,
-        headless=True
+        headless=False
     )
     
     print(f"\n✅ Scraped {len(results)} businesses:")
