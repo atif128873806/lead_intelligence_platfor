@@ -3,7 +3,9 @@ Lead Intelligence Platform - Enhanced Backend
 ==============================================
 Production-ready FastAPI backend with proper CORS, error handling, and seed data
 """
-
+from scraper import scrape_google_maps
+from ai_scorer import score_lead
+from fastapi import BackgroundTasks
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -189,6 +191,14 @@ class Lead(Base):
     last_contacted_at = Column(DateTime, nullable=True)
     
     notes = Column(Text)
+
+    rating = Column(Float, nullable=True)
+    reviews_count = Column(Integer, nullable=True)
+    category = Column(String, nullable=True)
+    maps_url = Column(String, nullable=True)
+    search_query = Column(String, nullable=True)
+    revenue_potential = Column(String, nullable=True)
+    recommended_action = Column(String, nullable=True)
 
 
 class Campaign(Base):
@@ -463,6 +473,321 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+# ==================== SCRAPER ENDPOINTS ====================
+# Add these endpoints to your backend/main.py
+
+"""
+Add these imports at the top of main.py:
+"""
+# from scraper import scrape_google_maps
+# from ai_scorer import score_lead
+# from fastapi import BackgroundTasks
+# import asyncio
+
+
+# ==================== SCRAPER SCHEMAS ====================
+
+class ScrapeRequest(BaseModel):
+    query: str
+    location: str = ""
+    max_results: int = 20
+
+class ScrapeResponse(BaseModel):
+    status: str
+    message: str
+    leads_found: int
+    leads_created: int
+    duplicates: int
+    campaign_id: int
+
+class ScrapeStatus(BaseModel):
+    status: str  # 'running', 'completed', 'failed'
+    progress: int  # 0-100
+    leads_found: int
+    leads_created: int
+    duplicates: int
+    error: Optional[str] = None
+
+
+# ==================== SCRAPER STATE ====================
+# Store scraping status in memory (use Redis in production)
+scraping_status = {}
+
+
+# ==================== SCRAPER FUNCTIONS ====================
+
+def scrape_and_create_leads(
+    campaign_id: int,
+    query: str,
+    location: str,
+    max_results: int,
+    db: Session
+):
+    """
+    Background task to scrape Google Maps and create leads
+    """
+    try:
+        # Update status
+        scraping_status[campaign_id] = {
+            'status': 'running',
+            'progress': 0,
+            'leads_found': 0,
+            'leads_created': 0,
+            'duplicates': 0,
+            'error': None
+        }
+        
+        # Get campaign
+        campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+        if not campaign:
+            scraping_status[campaign_id]['status'] = 'failed'
+            scraping_status[campaign_id]['error'] = 'Campaign not found'
+            return
+        
+        # Import scraper
+        from scraper import scrape_google_maps
+        from ai_scorer import score_lead
+        
+        # Update progress
+        scraping_status[campaign_id]['progress'] = 10
+        
+        # Scrape Google Maps
+        scraped_data = scrape_google_maps(
+            query=query,
+            location=location,
+            max_results=max_results,
+            headless=True
+        )
+        
+        scraping_status[campaign_id]['leads_found'] = len(scraped_data)
+        scraping_status[campaign_id]['progress'] = 50
+        
+        # Process each lead
+        leads_created = 0
+        duplicates = 0
+        
+        for idx, business_data in enumerate(scraped_data):
+            try:
+                # Check for duplicate (by maps_url)
+                maps_url = business_data.get('maps_url')
+                if maps_url:
+                    existing = db.query(Lead).filter(Lead.maps_url == maps_url).first()
+                    if existing:
+                        duplicates += 1
+                        continue
+                
+                # Score the lead
+                scores = score_lead(business_data)
+                
+                # Create lead in database
+                lead = Lead(
+                    business_name=business_data.get('name'),
+                    phone=business_data.get('phone'),
+                    email=business_data.get('email'),
+                    website=business_data.get('website'),
+                    address=business_data.get('address'),
+                    rating=business_data.get('rating'),
+                    reviews_count=business_data.get('reviews_count'),
+                    category=business_data.get('category'),
+                    maps_url=business_data.get('maps_url'),
+                    search_query=f"{query} {location}".strip(),
+                    ai_score=scores['ai_score'],
+                    priority=scores['priority'],
+                    conversion_probability=scores['conversion_probability'],
+                    data_quality_score=scores['data_quality_score'],
+                    revenue_potential=scores['revenue_potential'],
+                    recommended_action=scores['recommended_action'],
+                    status='new'
+                )
+                
+                db.add(lead)
+                leads_created += 1
+                
+                # Update progress
+                progress = 50 + int((idx + 1) / len(scraped_data) * 40)
+                scraping_status[campaign_id]['progress'] = progress
+                scraping_status[campaign_id]['leads_created'] = leads_created
+                scraping_status[campaign_id]['duplicates'] = duplicates
+                
+            except Exception as e:
+                print(f"Error creating lead: {str(e)}")
+                continue
+        
+        # Commit all leads
+        db.commit()
+        
+        # Update campaign stats
+        campaign.total_leads = (campaign.total_leads or 0) + leads_created
+        campaign.new_leads = (campaign.new_leads or 0) + leads_created
+        campaign.duplicate_leads = (campaign.duplicate_leads or 0) + duplicates
+        
+        # Count hot leads (Priority A)
+        hot_count = sum(1 for lead in scraped_data 
+                       if score_lead(lead)['priority'] == 'A')
+        campaign.hot_leads = (campaign.hot_leads or 0) + hot_count
+        
+        db.commit()
+        
+        # Update final status
+        scraping_status[campaign_id]['status'] = 'completed'
+        scraping_status[campaign_id]['progress'] = 100
+        
+    except Exception as e:
+        scraping_status[campaign_id]['status'] = 'failed'
+        scraping_status[campaign_id]['error'] = str(e)
+        print(f"Scraping failed: {str(e)}")
+
+
+# ==================== SCRAPER ENDPOINTS ====================
+
+@app.post("/api/campaigns/{campaign_id}/scrape", response_model=ScrapeResponse)
+async def scrape_campaign_leads(
+    campaign_id: int,
+    scrape_request: ScrapeRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
+    """
+    Start scraping Google Maps for leads and associate with campaign
+    
+    This runs in the background and returns immediately
+    Use GET /api/campaigns/{campaign_id}/scrape/status to check progress
+    """
+    # Validate campaign exists
+    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    
+    # Check if already scraping
+    if campaign_id in scraping_status and scraping_status[campaign_id]['status'] == 'running':
+        raise HTTPException(
+            status_code=400, 
+            detail="Scraping already in progress for this campaign"
+        )
+    
+    # Validate max_results
+    if scrape_request.max_results > 500:
+        raise HTTPException(
+            status_code=400,
+            detail="Maximum 500 results allowed per scrape"
+        )
+    
+    # Start scraping in background
+    background_tasks.add_task(
+        scrape_and_create_leads,
+        campaign_id=campaign_id,
+        query=scrape_request.query,
+        location=scrape_request.location,
+        max_results=scrape_request.max_results,
+        db=db
+    )
+    
+    return ScrapeResponse(
+        status="started",
+        message="Scraping started in background. Check status endpoint for progress.",
+        leads_found=0,
+        leads_created=0,
+        duplicates=0,
+        campaign_id=campaign_id
+    )
+
+
+@app.get("/api/campaigns/{campaign_id}/scrape/status", response_model=ScrapeStatus)
+async def get_scrape_status(
+    campaign_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get the current status of scraping for a campaign
+    """
+    # Validate campaign exists
+    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    
+    # Return status
+    if campaign_id not in scraping_status:
+        return ScrapeStatus(
+            status="not_started",
+            progress=0,
+            leads_found=0,
+            leads_created=0,
+            duplicates=0
+        )
+    
+    status_data = scraping_status[campaign_id]
+    return ScrapeStatus(
+        status=status_data['status'],
+        progress=status_data['progress'],
+        leads_found=status_data['leads_found'],
+        leads_created=status_data['leads_created'],
+        duplicates=status_data['duplicates'],
+        error=status_data.get('error')
+    )
+
+
+@app.post("/api/campaigns/{campaign_id}/scrape/stop")
+async def stop_scraping(
+    campaign_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Stop an ongoing scrape (note: may not stop immediately)
+    """
+    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    
+    if campaign_id in scraping_status:
+        scraping_status[campaign_id]['status'] = 'stopped'
+        return {"message": "Scraping stopped"}
+    
+    return {"message": "No scraping in progress"}
+
+
+# ==================== TEST SCRAPER ENDPOINT ====================
+
+@app.post("/api/scraper/test")
+async def test_scraper(scrape_request: ScrapeRequest):
+    """
+    Test the scraper without saving to database
+    Returns raw scraped data for testing
+    """
+    try:
+        from scraper import scrape_google_maps
+        from ai_scorer import score_lead
+        
+        # Limit test to 5 results
+        max_results = min(scrape_request.max_results, 5)
+        
+        scraped_data = scrape_google_maps(
+            query=scrape_request.query,
+            location=scrape_request.location,
+            max_results=max_results,
+            headless=True
+        )
+        
+        # Add scores to each result
+        results = []
+        for business in scraped_data:
+            scores = score_lead(business)
+            results.append({
+                **business,
+                **scores
+            })
+        
+        return {
+            "status": "success",
+            "count": len(results),
+            "results": results
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Scraper test failed: {str(e)}"
+        )
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Seed database

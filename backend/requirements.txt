@@ -21,3 +21,10 @@ PyJWT>=2.8.0
 
 # Additional utilities
 python-dateutil>=2.9.0
+
+
+selenium==4.15.2
+webdriver-manager==4.0.1
+beautifulsoup4==4.12.2
+fake-useragent==1.4.0
+# lxml==4.9.3
