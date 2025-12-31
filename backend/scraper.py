@@ -58,7 +58,7 @@ class GoogleMapsScraper:
         chrome_options.add_experimental_option('useAutomationExtension', False)
         
         try:
-            service = Service("/usr/bin/chromedriver")
+            service = Service("/usr/lib/chromium/chromedriver")
             self.driver = webdriver.Chrome(service=service, options=chrome_options)
             self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             logger.info("Chrome driver initialized successfully")
