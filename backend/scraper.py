@@ -41,21 +41,13 @@ class GoogleMapsScraper:
         """Initialize Chrome WebDriver with options"""
         chrome_options = Options()
         
-        # Railway/Production settings - always run headless on server
-        chrome_options.add_argument('--headless')
+        if self.headless:
+            chrome_options.add_argument('--headless')
+        
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument('--disable-gpu')
-        
-        # Detect if we're on Railway or local environment
-        import os
-        is_railway = os.path.exists('/usr/bin/chromium')
-        
-        if is_railway:
-            chrome_options.binary_location = '/usr/bin/chromium'
-            logger.info("Using Railway Chromium binary")
-        
         chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+        chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--window-size=1920,1080')
         chrome_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
         
@@ -64,15 +56,7 @@ class GoogleMapsScraper:
         chrome_options.add_experimental_option('useAutomationExtension', False)
         
         try:
-            if is_railway:
-                # On Railway, use system-installed chromedriver
-                service = Service('/usr/bin/chromedriver')
-                logger.info("Using Railway system chromedriver")
-            else:
-                # Locally, use ChromeDriverManager to auto-download
-                service = Service(ChromeDriverManager().install())
-                logger.info("Using ChromeDriverManager for local development")
-            
+            service = Service(ChromeDriverManager().install())
             self.driver = webdriver.Chrome(service=service, options=chrome_options)
             self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             logger.info("Chrome driver initialized successfully")
