@@ -99,11 +99,10 @@ class APIService {
   }
 
   // ==================== CAMPAIGNS API ====================// ==================== CAMPAIGNS ====================
-
-async getCampaigns() {
+getCampaigns = async () => {
   try {
     console.log('🔍 Calling GET /api/campaigns...');
-    const response = await this.client.get('/api/campaigns');
+    const response = await this.client.get('campaigns');
     console.log('🔍 Response:', response);
     console.log('🔍 Response data:', response.data);
     return response.data;
@@ -115,22 +114,22 @@ async getCampaigns() {
   // return response.data;
 }
 
-async getCampaign(id: number) {
+getCampaign = async (id: number) => {
   const response = await this.client.get(`/campaigns/${id}`);
   return response.data;
 }
 
-async createCampaign(data: CreateCampaignData) {
+createCampaign = async (data: CreateCampaignData) => {
   const response = await this.client.post('/campaigns', data);
   return response.data;
 }
 
-async updateCampaign(id: number, data: Partial<Campaign>) {
+updateCampaign = async (id: number, data: Partial<Campaign>) => {
   const response = await this.client.put(`/campaigns/${id}`, data);
   return response.data;
 }
 
-async deleteCampaign(id: number) {
+deleteCampaign = async (id: number) =>{
   const response = await this.client.delete(`/campaigns/${id}`);
   return response.data;
 }
