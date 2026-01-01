@@ -156,7 +156,7 @@ const CampaignScraper: React.FC<CampaignScraperProps> = ({
                             onChange={(e) => setMaxResults(Number(e.target.value))}
                             className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-700/50 border border-gray-600 rounded-xl text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
-                            <option value={10}>10 leads</option>
+                            <option value={3}>3 leads</option>
                             <option value={20}>20 leads</option>
                             <option value={50}>50 leads</option>
                             <option value={100}>100 leads</option>

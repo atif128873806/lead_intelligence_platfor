@@ -1,6 +1,6 @@
 """
-Google Maps Lead Scraper - Nixpacks Compatible
-Complete scraper for extracting business information from Google Maps
+Optimized Google Maps Lead Scraper for Railway
+Reduced wait times and memory usage
 """
 
 import time
@@ -27,100 +27,59 @@ class GoogleMapsScraperError(Exception):
 
 class GoogleMapsScraper:
     def __init__(self, headless: bool = True):
-        """
-        Initialize the Google Maps scraper
-        
-        Args:
-            headless: Run browser in headless mode (no GUI)
-        """
+        """Initialize the Google Maps scraper"""
         self.driver = None
         self.headless = headless
         self.results = []
         
     def _init_driver(self):
-        """Initialize Chrome WebDriver with options"""
+        """Initialize Chrome WebDriver with optimized options for Railway"""
         chrome_options = Options()
         
         if self.headless:
             chrome_options.add_argument('--headless=new')
         
+        # Essential options
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument('--disable-blink-features=AutomationControlled')
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--window-size=1920,1080')
+        
+        # Memory optimization for Railway
+        chrome_options.add_argument('--single-process')
+        chrome_options.add_argument('--disable-extensions')
+        chrome_options.add_argument('--disable-software-rasterizer')
+        chrome_options.add_argument('--disable-logging')
+        chrome_options.add_argument('--disable-background-networking')
+        chrome_options.add_argument('--disable-default-apps')
+        chrome_options.add_argument('--disable-sync')
+        chrome_options.add_argument('--no-first-run')
+        chrome_options.add_argument('--disable-features=VizDisplayCompositor')
+        
+        # User agent
         chrome_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
         
         # Disable automation flags
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
         
-        # Production specific settings
-        chrome_options.add_argument('--disable-extensions')
-        chrome_options.add_argument('--disable-software-rasterizer')
-        
         try:
-            # Try to find Chrome/Chromium in various locations
-            chrome_paths = [
-                '/nix/store/*/bin/chromium',  # Nixpacks location (glob pattern)
-                '/usr/bin/chromium',           # Standard Linux
-                '/usr/bin/chromium-browser',   # Ubuntu
-                '/usr/bin/google-chrome',      # Google Chrome
-                'chromium',                     # System PATH
-            ]
-            
-            chrome_binary = None
-            
-            # For Nix path with wildcard, use glob
             import glob
+            
+            # Find Chrome in Nix store
             nix_chromes = glob.glob('/nix/store/*/bin/chromium')
             if nix_chromes:
-                chrome_binary = nix_chromes[0]
-                logger.info(f"Found Chrome via Nix at: {chrome_binary}")
-            else:
-                # Try other standard paths
-                for path in chrome_paths[1:]:  # Skip the glob pattern
-                    if os.path.exists(path):
-                        chrome_binary = path
-                        logger.info(f"Found Chrome at: {path}")
-                        break
+                chrome_options.binary_location = nix_chromes[0]
+                logger.info(f"Using Chrome: {nix_chromes[0]}")
             
-            if chrome_binary:
-                chrome_options.binary_location = chrome_binary
-            else:
-                logger.warning("Chrome binary not found at standard paths, using system default")
-            
-            # Try to find ChromeDriver
-            chromedriver_paths = [
-                '/usr/bin/chromedriver',
-                '/nix/store/*/bin/chromedriver',
-                'chromedriver'
-            ]
-            
-            chromedriver_path = None
-            
-            # Check for Nix chromedriver
+            # Find ChromeDriver
             nix_drivers = glob.glob('/nix/store/*/bin/chromedriver')
             if nix_drivers:
-                chromedriver_path = nix_drivers[0]
-                logger.info(f"Found ChromeDriver via Nix at: {chromedriver_path}")
-            else:
-                # Try standard paths
-                for path in ['/usr/bin/chromedriver', 'chromedriver']:
-                    if os.path.exists(path):
-                        chromedriver_path = path
-                        logger.info(f"Found ChromeDriver at: {path}")
-                        break
-            
-            if chromedriver_path:
-                service = Service(chromedriver_path)
+                service = Service(nix_drivers[0])
                 self.driver = webdriver.Chrome(service=service, options=chrome_options)
+                logger.info(f"Using ChromeDriver: {nix_drivers[0]}")
             else:
-                # Last resort - try webdriver-manager (for local dev)
-                logger.info("Trying webdriver-manager as fallback...")
-                from webdriver_manager.chrome import ChromeDriverManager
-                service = Service(ChromeDriverManager().install())
-                self.driver = webdriver.Chrome(service=service, options=chrome_options)
+                self.driver = webdriver.Chrome(options=chrome_options)
             
             self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             logger.info("Chrome driver initialized successfully")
@@ -130,21 +89,10 @@ class GoogleMapsScraper:
             raise GoogleMapsScraperError(f"Failed to initialize Chrome driver: {str(e)}")
     
     def search(self, query: str, location: str = "", max_results: int = 20) -> List[Dict]:
-        """
-        Search Google Maps and scrape business information
-        
-        Args:
-            query: Search query (e.g., "restaurants")
-            location: Location (e.g., "New York")
-            max_results: Maximum number of results to scrape
-            
-        Returns:
-            List of dictionaries containing business information
-        """
+        """Search Google Maps and scrape business information"""
         try:
             self._init_driver()
             
-            # Construct search query
             search_query = f"{query} {location}".strip() if location else query
             logger.info(f"Starting scrape for: {search_query}")
             
@@ -152,13 +100,13 @@ class GoogleMapsScraper:
             url = f"https://www.google.com/maps/search/{search_query.replace(' ', '+')}"
             self.driver.get(url)
             
-            # Wait for results to load
-            time.sleep(5)
+            # REDUCED: Wait 2 seconds instead of 5
+            time.sleep(2)
             
-            # Scroll to load more results
+            # Scroll to load results
             self._scroll_results_panel(max_results)
             
-            # Get all business listings
+            # Extract listings
             self.results = self._extract_listings(max_results)
             
             logger.info(f"Successfully scraped {len(self.results)} businesses")
@@ -173,25 +121,19 @@ class GoogleMapsScraper:
     def _scroll_results_panel(self, max_results: int):
         """Scroll the results panel to load more businesses"""
         try:
-            # Find the scrollable results panel
-            scrollable_div = self.driver.find_element(
-                By.CSS_SELECTOR, 
-                'div[role="feed"]'
-            )
+            scrollable_div = self.driver.find_element(By.CSS_SELECTOR, 'div[role="feed"]')
             
             last_height = 0
             scroll_attempts = 0
-            max_scroll_attempts = max_results // 10 + 5
+            max_scroll_attempts = min(max_results // 10 + 2, 5)  # REDUCED scroll attempts
             
             while scroll_attempts < max_scroll_attempts:
-                # Scroll down
                 self.driver.execute_script(
                     'arguments[0].scrollTo(0, arguments[0].scrollHeight);', 
                     scrollable_div
                 )
-                time.sleep(2)
+                time.sleep(1)  # REDUCED: 1 second instead of 2
                 
-                # Check if we've reached the bottom
                 new_height = self.driver.execute_script(
                     'return arguments[0].scrollHeight', 
                     scrollable_div
@@ -203,7 +145,6 @@ class GoogleMapsScraper:
                     
                 last_height = new_height
                 scroll_attempts += 1
-                
                 logger.info(f"Scrolling... attempt {scroll_attempts}")
                 
         except Exception as e:
@@ -214,7 +155,6 @@ class GoogleMapsScraper:
         businesses = []
         
         try:
-            # Find all business listing elements
             listings = self.driver.find_elements(
                 By.CSS_SELECTOR,
                 'div[role="feed"] > div > div > a'
@@ -227,19 +167,18 @@ class GoogleMapsScraper:
                     break
                 
                 try:
-                    # Click on the listing to open details
+                    # Click listing
                     self.driver.execute_script("arguments[0].click();", listing)
-                    time.sleep(3)  # Wait for details to load
+                    time.sleep(2)  # REDUCED: 2 seconds instead of 3
                     
-                    # Extract business data
+                    # Extract data
                     business_data = self._extract_business_details()
                     
                     if business_data:
                         businesses.append(business_data)
                         logger.info(f"Scraped {idx + 1}/{max_results}: {business_data.get('name', 'Unknown')}")
                     
-                    # Small delay to avoid rate limiting
-                    time.sleep(2)
+                    time.sleep(1)  # REDUCED: 1 second instead of 2
                     
                 except Exception as e:
                     logger.warning(f"Failed to extract listing {idx + 1}: {str(e)}")
@@ -251,16 +190,16 @@ class GoogleMapsScraper:
         return businesses
     
     def _extract_business_details(self) -> Optional[Dict]:
-        """Extract detailed information from the business detail panel"""
+        """Extract detailed information from business detail panel"""
         try:
             business_data = {}
             
-            # Wait for detail panel to load
-            WebDriverWait(self.driver, 10).until(
+            # Wait for panel (REDUCED timeout)
+            WebDriverWait(self.driver, 5).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, 'h1'))
             )
             
-            # Extract business name
+            # Extract name
             try:
                 name = self.driver.find_element(By.CSS_SELECTOR, 'h1').text
                 business_data['name'] = name
@@ -312,7 +251,7 @@ class GoogleMapsScraper:
             except:
                 business_data['address'] = None
             
-            # Extract phone number
+            # Extract phone
             try:
                 phone_button = self.driver.find_element(
                     By.CSS_SELECTOR,
@@ -334,7 +273,7 @@ class GoogleMapsScraper:
             except:
                 business_data['website'] = None
             
-            # Extract Google Maps URL
+            # Extract Maps URL
             try:
                 maps_url = self.driver.current_url
                 business_data['maps_url'] = maps_url
@@ -363,38 +302,9 @@ def scrape_google_maps(
     max_results: int = 20,
     headless: bool = True
 ) -> List[Dict]:
-    """
-    Convenience function to scrape Google Maps
-    
-    Args:
-        query: Search query
-        location: Location
-        max_results: Maximum results
-        headless: Run in headless mode
-        
-    Returns:
-        List of business data dictionaries
-    """
+    """Convenience function to scrape Google Maps"""
     scraper = GoogleMapsScraper(headless=headless)
     try:
         return scraper.search(query, location, max_results)
     finally:
         scraper.close()
-
-
-if __name__ == "__main__":
-    # Example usage
-    results = scrape_google_maps(
-        query="restaurants",
-        location="New York",
-        max_results=10,
-        headless=True
-    )
-    
-    print(f"\n✅ Scraped {len(results)} businesses:")
-    for idx, business in enumerate(results, 1):
-        print(f"\n{idx}. {business.get('name')}")
-        print(f"   Rating: {business.get('rating')} ({business.get('reviews_count')} reviews)")
-        print(f"   Phone: {business.get('phone')}")
-        print(f"   Website: {business.get('website')}")
-        print(f"   Address: {business.get('address')}")
