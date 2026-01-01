@@ -1389,13 +1389,16 @@ async def startup_event():
         print("Production startup — skipping heavy tasks")
 if __name__ == "__main__":
     import uvicorn
+    import os
+    
+    port = int(os.environ.get("PORT", 8000))  # ← UNCOMMENT THIS
+    
     print("\n" + "="*80)
     print("🚀 Starting Lead Intelligence Platform API")
     print("="*80)
-    print(f"📍 API will be available at: http://localhost:8000")
-    print(f"📚 API Documentation: http://localhost:8000/docs")
+    print(f"📍 Port: {port}")
+    print(f"📚 API Documentation: /docs")
     print(f"🔐 Demo Login: admin@example.com / password123")
     print("="*80 + "\n")
     
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=port)  # ← USE port VARIABLE
