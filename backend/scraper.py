@@ -1,10 +1,11 @@
 """
-Google Maps Lead Scraper
+Google Maps Lead Scraper - Nixpacks Compatible
 Complete scraper for extracting business information from Google Maps
 """
 
 import time
 import re
+import os
 from typing import List, Dict, Optional
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -41,28 +42,91 @@ class GoogleMapsScraper:
         chrome_options = Options()
         
         if self.headless:
-            chrome_options.add_argument('--headless')
+            chrome_options.add_argument('--headless=new')
         
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--disable-blink-features=AutomationControlled')
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--window-size=1920,1080')
-        chrome_options.binary_location = "/usr/bin/chromium"
-        chrome_options.add_argument(
-            "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
-        )   
+        chrome_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
         
         # Disable automation flags
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
         
+        # Production specific settings
+        chrome_options.add_argument('--disable-extensions')
+        chrome_options.add_argument('--disable-software-rasterizer')
+        
         try:
-            service = Service("/usr/lib/chromium/chromedriver")
-            self.driver = webdriver.Chrome(service=service, options=chrome_options)
+            # Try to find Chrome/Chromium in various locations
+            chrome_paths = [
+                '/nix/store/*/bin/chromium',  # Nixpacks location (glob pattern)
+                '/usr/bin/chromium',           # Standard Linux
+                '/usr/bin/chromium-browser',   # Ubuntu
+                '/usr/bin/google-chrome',      # Google Chrome
+                'chromium',                     # System PATH
+            ]
+            
+            chrome_binary = None
+            
+            # For Nix path with wildcard, use glob
+            import glob
+            nix_chromes = glob.glob('/nix/store/*/bin/chromium')
+            if nix_chromes:
+                chrome_binary = nix_chromes[0]
+                logger.info(f"Found Chrome via Nix at: {chrome_binary}")
+            else:
+                # Try other standard paths
+                for path in chrome_paths[1:]:  # Skip the glob pattern
+                    if os.path.exists(path):
+                        chrome_binary = path
+                        logger.info(f"Found Chrome at: {path}")
+                        break
+            
+            if chrome_binary:
+                chrome_options.binary_location = chrome_binary
+            else:
+                logger.warning("Chrome binary not found at standard paths, using system default")
+            
+            # Try to find ChromeDriver
+            chromedriver_paths = [
+                '/usr/bin/chromedriver',
+                '/nix/store/*/bin/chromedriver',
+                'chromedriver'
+            ]
+            
+            chromedriver_path = None
+            
+            # Check for Nix chromedriver
+            nix_drivers = glob.glob('/nix/store/*/bin/chromedriver')
+            if nix_drivers:
+                chromedriver_path = nix_drivers[0]
+                logger.info(f"Found ChromeDriver via Nix at: {chromedriver_path}")
+            else:
+                # Try standard paths
+                for path in ['/usr/bin/chromedriver', 'chromedriver']:
+                    if os.path.exists(path):
+                        chromedriver_path = path
+                        logger.info(f"Found ChromeDriver at: {path}")
+                        break
+            
+            if chromedriver_path:
+                service = Service(chromedriver_path)
+                self.driver = webdriver.Chrome(service=service, options=chrome_options)
+            else:
+                # Last resort - try webdriver-manager (for local dev)
+                logger.info("Trying webdriver-manager as fallback...")
+                from webdriver_manager.chrome import ChromeDriverManager
+                service = Service(ChromeDriverManager().install())
+                self.driver = webdriver.Chrome(service=service, options=chrome_options)
+            
             self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             logger.info("Chrome driver initialized successfully")
+            
         except Exception as e:
+            logger.error(f"Failed to initialize Chrome driver: {str(e)}")
             raise GoogleMapsScraperError(f"Failed to initialize Chrome driver: {str(e)}")
     
     def search(self, query: str, location: str = "", max_results: int = 20) -> List[Dict]:
@@ -324,7 +388,7 @@ if __name__ == "__main__":
         query="restaurants",
         location="New York",
         max_results=10,
-        headless=False
+        headless=True
     )
     
     print(f"\n✅ Scraped {len(results)} businesses:")
