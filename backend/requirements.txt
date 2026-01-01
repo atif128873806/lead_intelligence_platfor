@@ -29,3 +29,5 @@ webdriver-manager==4.0.1
 beautifulsoup4==4.12.2
 fake-useragent==1.4.0
 lxml==4.9.3 
+
+outscraper==3.1.7

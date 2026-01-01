@@ -516,6 +516,8 @@ scraping_status = {}
 
 
 # ==================== SCRAPER FUNCTIONS ====================
+# ==================== UPDATED SCRAPER ENDPOINTS ====================
+# Replace the scrape_and_create_leads function in your main.py
 
 def scrape_and_create_leads(
     campaign_id: int,
@@ -525,13 +527,13 @@ def scrape_and_create_leads(
     db: Session
 ):
     """
-    Background task to scrape Google Maps and create leads
+    Background task to scrape Google Maps and create leads using Outscraper
     """
     try:
         # Update status
         scraping_status[campaign_id] = {
             'status': 'running',
-            'progress': 0,
+            'progress': 10,
             'leads_found': 0,
             'leads_created': 0,
             'duplicates': 0,
@@ -545,19 +547,18 @@ def scrape_and_create_leads(
             scraping_status[campaign_id]['error'] = 'Campaign not found'
             return
         
-        # Import scraper
-        from scraper import scrape_google_maps
+        # Import services
+        from outscraper_service import scrape_google_maps_outscraper
         from ai_scorer import score_lead
         
         # Update progress
-        scraping_status[campaign_id]['progress'] = 10
+        scraping_status[campaign_id]['progress'] = 20
         
-        # Scrape Google Maps
-        scraped_data = scrape_google_maps(
+        # Scrape using Outscraper (MUCH FASTER!)
+        scraped_data = scrape_google_maps_outscraper(
             query=query,
             location=location,
-            max_results=max_results,
-            headless=True
+            max_results=max_results
         )
         
         scraping_status[campaign_id]['leads_found'] = len(scraped_data)
@@ -569,13 +570,19 @@ def scrape_and_create_leads(
         
         for idx, business_data in enumerate(scraped_data):
             try:
-                # Check for duplicate (by maps_url)
+                # Check for duplicate (by maps_url or phone)
                 maps_url = business_data.get('maps_url')
+                phone = business_data.get('phone')
+                
+                existing = None
                 if maps_url:
                     existing = db.query(Lead).filter(Lead.maps_url == maps_url).first()
-                    if existing:
-                        duplicates += 1
-                        continue
+                if not existing and phone:
+                    existing = db.query(Lead).filter(Lead.phone == phone).first()
+                
+                if existing:
+                    duplicates += 1
+                    continue
                 
                 # Score the lead
                 scores = score_lead(business_data)
@@ -605,7 +612,7 @@ def scrape_and_create_leads(
                 leads_created += 1
                 
                 # Update progress
-                progress = 50 + int((idx + 1) / len(scraped_data) * 40)
+                progress = 50 + int((idx + 1) / len(scraped_data) * 45)
                 scraping_status[campaign_id]['progress'] = progress
                 scraping_status[campaign_id]['leads_created'] = leads_created
                 scraping_status[campaign_id]['duplicates'] = duplicates
@@ -637,6 +644,8 @@ def scrape_and_create_leads(
         scraping_status[campaign_id]['status'] = 'failed'
         scraping_status[campaign_id]['error'] = str(e)
         print(f"Scraping failed: {str(e)}")
+
+
 
 
 # ==================== SCRAPER ENDPOINTS ====================
