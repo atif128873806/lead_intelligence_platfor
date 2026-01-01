@@ -1237,8 +1237,8 @@ def health_check():
     """Detailed health check."""
     return {
         "status": "healthy",
-        "database": "connected",
-        "timestamp": datetime.utcnow().isoformat()
+        # "database": "connected",
+        # "timestamp": datetime.utcnow().isoformat()
     }
 
 @app.get("/api/admin/seed-database")
@@ -1374,9 +1374,9 @@ def root():
     """Root endpoint"""
     return {
         "message": "Lead Intelligence Platform API",
-        "version": "1.0.0",
-        "docs": "/docs",
-        "health": "/health"
+        # "version": "1.0.0",
+        # "docs": "/docs",
+        # "health": "/health"
     }
 if __name__ == "__main__":
     import uvicorn
