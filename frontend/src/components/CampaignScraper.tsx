@@ -33,7 +33,7 @@ const CampaignScraper: React.FC<CampaignScraperProps> = ({
 }) => {
     const [query, setQuery] = useState('');
     const [location, setLocation] = useState('');
-    const [maxResults, setMaxResults] = useState(20);
+    const [maxResults, setMaxResults] = useState(2);
     const [status, setStatus] = useState<ScrapeStatus>({
         status: 'not_started',
         progress: 0,
@@ -156,12 +156,9 @@ const CampaignScraper: React.FC<CampaignScraperProps> = ({
                             onChange={(e) => setMaxResults(Number(e.target.value))}
                             className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-700/50 border border-gray-600 rounded-xl text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
+                            <option value={2}>2 leads ✅ Stable</option>
                             <option value={3}>3 leads</option>
-                            <option value={20}>20 leads</option>
-                            <option value={50}>50 leads</option>
-                            <option value={100}>100 leads</option>
-                            <option value={200}>200 leads</option>
-                            <option value={500}>500 leads (max)</option>
+                            <option value={5}>5 leads ⚠️ May crash</option>
                         </select>
                         <p className="text-xs text-gray-500 mt-1">
                             Larger numbers take longer to scrape (approx. 3-5 seconds per lead)
@@ -264,7 +261,7 @@ const CampaignScraper: React.FC<CampaignScraperProps> = ({
                             });
                         }}
                         className="px-4 sm:px-6 py-2 sm:py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all text-sm sm:text-base"
-                        >
+                    >
                         Try Again
                     </motion.button>
                 </div>
