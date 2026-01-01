@@ -1360,24 +1360,24 @@ def manual_seed(db: Session = Depends(get_db)):
         print(f"❌ Seeding failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Seeding failed: {str(e)}")
 
-@app.get("/health")
-def health_check():
-    """Health check endpoint for Railway"""
-    return {
-        "status": "healthy",
-        "service": "Lead Intelligence Platform API",
-        "timestamp": datetime.utcnow().isoformat()
-    }
+# @app.get("/health")
+# def health_check():
+#     """Health check endpoint for Railway"""
+#     return {
+#         "status": "healthy",
+#         "service": "Lead Intelligence Platform API",
+#         "timestamp": datetime.utcnow().isoformat()
+#     }
 
-@app.get("/")
-def root():
-    """Root endpoint"""
-    return {
-        "message": "Lead Intelligence Platform API",
-        # "version": "1.0.0",
-        # "docs": "/docs",
-        # "health": "/health"
-    }
+# @app.get("/")
+# def root():
+#     """Root endpoint"""
+#     return {
+#         "message": "Lead Intelligence Platform API",
+#         # "version": "1.0.0",
+#         # "docs": "/docs",
+#         # "health": "/health"
+#     }
 if __name__ == "__main__":
     import uvicorn
     print("\n" + "="*80)
