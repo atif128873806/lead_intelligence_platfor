@@ -5,9 +5,6 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     chromium \
     chromium-driver \
-    wget \
-    gnupg \
-    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 ENV CHROME_BIN=/usr/bin/chromium
@@ -16,7 +13,5 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-
-EXPOSE 8000
 
 CMD ["python", "run.py"]
