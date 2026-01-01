@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import {
@@ -8,7 +8,6 @@ import {
     RocketLaunchIcon,
     CheckCircleIcon,
     XCircleIcon,
-    ClockIcon,
 } from '@heroicons/react/24/outline';
 import { api } from '@/services/api';
 
@@ -29,7 +28,7 @@ interface ScrapeStatus {
 
 const CampaignScraper: React.FC<CampaignScraperProps> = ({
     campaignId,
-    campaignName,
+    // campaignName,
     onComplete,
 }) => {
     const [query, setQuery] = useState('');
