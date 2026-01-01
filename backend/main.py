@@ -1236,7 +1236,7 @@ def root():
 def health_check():
     """Detailed health check."""
     return {
-        "status": "healthy",
+        "status": "ok",
         # "database": "connected",
         # "timestamp": datetime.utcnow().isoformat()
     }
