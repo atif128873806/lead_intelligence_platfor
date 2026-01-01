@@ -22,6 +22,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { api } from '@/services/api';
 import type { Campaign, CreateCampaignData } from '@/types';
+import CampaignScraper from '@/components/CampaignScraper';
 
 const Campaigns: React.FC = () => {
     const navigate = useNavigate();
@@ -535,6 +536,7 @@ console.log('🔍 Filtered count:', filteredCampaigns?.length);
                                 className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-4 sm:p-6 shadow-xl border border-gray-700 hover:border-indigo-500 transition-all"
                             >
                                 {/* Header */}
+
                                 <div className="flex items-start justify-between mb-3 sm:mb-4">
                                     <div className="flex-1 min-w-0">
                                         <h3 className="text-base sm:text-xl font-bold text-white mb-1 sm:mb-2 line-clamp-2">
@@ -641,6 +643,18 @@ console.log('🔍 Filtered count:', filteredCampaigns?.length);
                                             </motion.button>
                                         )}
                                     </div>
+                                </div>
+
+                                  {/* 🎯 ADD SCRAPER HERE - RIGHT AFTER ACTIONS */}
+                                <div className="mt-4 pt-4 border-t border-gray-700">
+                                    <CampaignScraper 
+                                        campaignId={campaign.id}
+                                        campaignName={campaign.name}
+                                        onComplete={() => {
+                                            refetch(); // Refresh campaigns after scraping
+                                            queryClient.invalidateQueries({ queryKey: ['leads'] });
+                                        }}
+                                    />
                                 </div>
                             </motion.div>
                         ))

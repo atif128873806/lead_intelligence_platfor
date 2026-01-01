@@ -161,6 +161,23 @@ getQualityDistribution = async (): Promise<Array<{ range: string; count: number 
     );
     return response.data;
   }
+
+  // ==================== SCRAPER METHODS ====================
+
+startCampaignScrape = async (campaignId: number, data: { query: string; location: string; max_results: number }) => {
+  const response = await this.client.post(`/api/campaigns/${campaignId}/scrape`, data);
+  return response.data;
+};
+
+getCampaignScrapeStatus = async (campaignId: number) => {
+  const response = await this.client.get(`/api/campaigns/${campaignId}/scrape/status`);
+  return response.data;
+};
+
+stopCampaignScrape = async (campaignId: number) => {
+  const response = await this.client.post(`/api/campaigns/${campaignId}/scrape/stop`);
+  return response.data;
+};
 }
 
 // Export singleton instance
