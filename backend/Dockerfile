@@ -1,52 +1,30 @@
 FROM python:3.11-slim
 
-# -----------------------------
-# System dependencies
-# -----------------------------
+# Set working directory
+WORKDIR /app
+
+# Install Chrome and dependencies
 RUN apt-get update && apt-get install -y \
     chromium \
     chromium-driver \
-    ca-certificates \
-    fonts-liberation \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libcups2 \
-    libdrm2 \
-    libgbm1 \
-    libgtk-3-0 \
-    libnss3 \
-    libx11-xcb1 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
-    libu2f-udev \
-    libvulkan1 \
     wget \
+    gnupg \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# -----------------------------
-# Chrome environment
-# -----------------------------
+# Set Chrome environment variables
 ENV CHROME_BIN=/usr/bin/chromium
 ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
 
-# -----------------------------
-# App setup
-# -----------------------------
-WORKDIR /app
-
+# Copy and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy application code
 COPY . .
 
-# -----------------------------
-# Railway port
-# -----------------------------
+# Expose port (Railway will override with PORT env var)
 EXPOSE 8000
 
-# -----------------------------
-# Start FastAPI CORRECTLY
-# -----------------------------
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0"]
+# Start application using run.py
+CMD ["python", "run.py"]
