@@ -1,5 +1,5 @@
 """
-Outscraper Google Maps Scraping Service - Updated for v6.0.0
+Outscraper Google Maps Scraping Service - Corrected for v6.0.0
 Fast, reliable lead generation using Outscraper API
 """
 
@@ -52,21 +52,20 @@ class OutscraperService:
             search_query = f"{query} {location}".strip() if location else query
             logger.info(f"Scraping Outscraper for: {search_query}")
             
-            # Call Outscraper API (v6 syntax)
-            results = self.client.google_maps_search_v3(
+            # Call Outscraper API (correct v6 method)
+            results = self.client.google_maps_search(
                 query=[search_query],
                 limit=max_results,
                 language='en',
-                region='us',
-                skip=0
+                region='us'
             )
             
             # Process and standardize results
             businesses = []
             
-            # Results come as list of lists
-            if results and len(results) > 0:
-                for result in results[0]:  # First query results
+            # Results format in v6: list of dicts directly
+            if results:
+                for result in results:
                     business_data = self._standardize_result(result)
                     if business_data:
                         businesses.append(business_data)
@@ -89,23 +88,23 @@ class OutscraperService:
             Standardized business dictionary
         """
         try:
-            # Extract and standardize fields (v6 field names)
+            # Extract and standardize fields
             business_data = {
                 'name': result.get('name'),
                 'phone': result.get('phone'),
-                'website': result.get('site') or result.get('domain'),
-                'address': result.get('full_address') or result.get('address'),
+                'website': result.get('site') or result.get('domain') or result.get('website'),
+                'address': result.get('full_address') or result.get('address') or result.get('street'),
                 'rating': result.get('rating'),
-                'reviews_count': result.get('reviews') or result.get('reviews_count'),
-                'category': result.get('type') or result.get('category') or result.get('categories'),
-                'maps_url': result.get('google_id') and f"https://www.google.com/maps/place/?q=place_id:{result.get('google_id')}" or result.get('url'),
+                'reviews_count': result.get('reviews') or result.get('reviews_count') or result.get('reviews_data'),
+                'category': result.get('type') or result.get('category') or result.get('categories', [None])[0] if isinstance(result.get('categories'), list) else result.get('categories'),
+                'maps_url': result.get('place_link') or result.get('google_url') or (f"https://www.google.com/maps/place/?q=place_id:{result.get('place_id')}" if result.get('place_id') else None),
                 
                 # Additional Outscraper fields
-                'latitude': result.get('latitude'),
-                'longitude': result.get('longitude'),
+                'latitude': result.get('latitude') or result.get('lat'),
+                'longitude': result.get('longitude') or result.get('lng'),
                 'business_status': result.get('business_status'),
                 'price_level': result.get('price_level'),
-                'working_hours': result.get('working_hours'),
+                'working_hours': result.get('working_hours') or result.get('hours'),
             }
             
             return business_data
