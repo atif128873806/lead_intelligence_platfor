@@ -30,7 +30,7 @@ class APIService {
       },
       // withCredentials: true,
     });
-    
+
 
 
     // Add auth token to requests
@@ -57,97 +57,97 @@ class APIService {
   }
 
   // ==================== AUTH API ====================
-login = async (data: LoginData): Promise<AuthResponse> =>{
+  login = async (data: LoginData): Promise<AuthResponse> => {
     const response = await this.client.post<AuthResponse>('/auth/login', data);
     return response.data;
   }
 
-register = async (data: RegisterData): Promise<AuthResponse> =>{
+  register = async (data: RegisterData): Promise<AuthResponse> => {
     const response = await this.client.post<AuthResponse>('/auth/register', data);
     return response.data;
   }
 
-getMe = async (): Promise<User> => {
+  getMe = async (): Promise<User> => {
     const response = await this.client.get<User>('/auth/me');
     return response.data;
   }
 
   // ==================== LEADS API ====================
-getLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
+  getLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
     const response = await this.client.get<Lead[]>('/leads', { params: filters });
     return response.data;
   }
 
-getLead = async (id: number): Promise<Lead> => {
+  getLead = async (id: number): Promise<Lead> => {
     const response = await this.client.get<Lead>(`/leads/${id}`);
     return response.data;
   }
 
-createLead = async (data: CreateLeadData): Promise<Lead> => {
+  createLead = async (data: CreateLeadData): Promise<Lead> => {
     const response = await this.client.post<Lead>('/leads', data);
     return response.data;
   }
 
-updateLead = async (id: number, data: UpdateLeadData): Promise<Lead> => {
+  updateLead = async (id: number, data: UpdateLeadData): Promise<Lead> => {
     const response = await this.client.put<Lead>(`/leads/${id}`, data);
     return response.data;
   }
 
-deleteLead = async (id: number): Promise<{ message: string }> => {
+  deleteLead = async (id: number): Promise<{ message: string }> => {
     const response = await this.client.delete<{ message: string }>(`/leads/${id}`);
     return response.data;
   }
 
   // ==================== CAMPAIGNS API ====================// ==================== CAMPAIGNS ====================
-getCampaigns = async () => {
-  try {
-    console.log('🔍 Calling GET /api/campaigns...');
-    const response = await this.client.get('campaigns');
-    console.log('🔍 Response:', response);
-    console.log('🔍 Response data:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('❌ getCampaigns error:', error);
-    throw error;
+  getCampaigns = async () => {
+    try {
+      console.log('🔍 Calling GET /api/campaigns...');
+      const response = await this.client.get('campaigns');
+      console.log('🔍 Response:', response);
+      console.log('🔍 Response data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ getCampaigns error:', error);
+      throw error;
+    }
+    // const response = await this.client.get('/campaigns');
+    // return response.data;
   }
-  // const response = await this.client.get('/campaigns');
-  // return response.data;
-}
 
-getCampaign = async (id: number) => {
-  const response = await this.client.get(`/campaigns/${id}`);
-  return response.data;
-}
+  getCampaign = async (id: number) => {
+    const response = await this.client.get(`/campaigns/${id}`);
+    return response.data;
+  }
 
-createCampaign = async (data: CreateCampaignData) => {
-  const response = await this.client.post('/campaigns', data);
-  return response.data;
-}
+  createCampaign = async (data: CreateCampaignData) => {
+    const response = await this.client.post('/campaigns', data);
+    return response.data;
+  }
 
-updateCampaign = async (id: number, data: Partial<Campaign>) => {
-  const response = await this.client.put(`/campaigns/${id}`, data);
-  return response.data;
-}
+  updateCampaign = async (id: number, data: Partial<Campaign>) => {
+    const response = await this.client.put(`/campaigns/${id}`, data);
+    return response.data;
+  }
 
-deleteCampaign = async (id: number) =>{
-  const response = await this.client.delete(`/campaigns/${id}`);
-  return response.data;
-}
+  deleteCampaign = async (id: number) => {
+    const response = await this.client.delete(`/campaigns/${id}`);
+    return response.data;
+  }
 
   // ==================== DASHBOARD API ====================
-getDashboardStats = async (): Promise<DashboardStats> => {
+  getDashboardStats = async (): Promise<DashboardStats> => {
     const response = await this.client.get<DashboardStats>('/dashboard/stats');
     return response.data;
   }
 
-getLeadsByPriority = async (): Promise<Array<{ priority: string; count: number }>> => {
+  getLeadsByPriority = async (): Promise<Array<{ priority: string; count: number }>> => {
     const response = await this.client.get<Array<{ priority: string; count: number }>>(
       '/dashboard/charts/leads-by-priority'
     );
     return response.data;
   }
 
-getLeadsTimeline = async (days = 30): Promise<Array<{ date: string; count: number }>> => {
+  getLeadsTimeline = async (days = 30): Promise<Array<{ date: string; count: number }>> => {
     const response = await this.client.get<Array<{ date: string; count: number }>>(
       '/dashboard/charts/leads-timeline',
       { params: { days } }
@@ -155,7 +155,7 @@ getLeadsTimeline = async (days = 30): Promise<Array<{ date: string; count: numbe
     return response.data;
   }
 
-getQualityDistribution = async (): Promise<Array<{ range: string; count: number }>> => {
+  getQualityDistribution = async (): Promise<Array<{ range: string; count: number }>> => {
     const response = await this.client.get<Array<{ range: string; count: number }>>(
       '/dashboard/charts/quality-distribution'
     );
@@ -163,21 +163,22 @@ getQualityDistribution = async (): Promise<Array<{ range: string; count: number 
   }
 
   // ==================== SCRAPER METHODS ====================
+  // ==================== SCRAPER METHODS ====================
 
-startCampaignScrape = async (campaignId: number, data: { query: string; location: string; max_results: number }) => {
-  const response = await this.client.post(`/api/campaigns/${campaignId}/scrape`, data);
-  return response.data;
-};
+  startCampaignScrape = async (campaignId: number, data: { query: string; location: string; max_results: number }) => {
+    const response = await this.client.post(`/campaigns/${campaignId}/scrape`, data);
+    return response.data;
+  };
 
-getCampaignScrapeStatus = async (campaignId: number) => {
-  const response = await this.client.get(`/api/campaigns/${campaignId}/scrape/status`);
-  return response.data;
-};
+  getCampaignScrapeStatus = async (campaignId: number) => {
+    const response = await this.client.get(`/campaigns/${campaignId}/scrape/status`);
+    return response.data;
+  };
 
-stopCampaignScrape = async (campaignId: number) => {
-  const response = await this.client.post(`/api/campaigns/${campaignId}/scrape/stop`);
-  return response.data;
-};
+  stopCampaignScrape = async (campaignId: number) => {
+    const response = await this.client.post(`/campaigns/${campaignId}/scrape/stop`);
+    return response.data;
+  };
 }
 
 // Export singleton instance
