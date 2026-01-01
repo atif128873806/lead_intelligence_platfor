@@ -1378,6 +1378,15 @@ def manual_seed(db: Session = Depends(get_db)):
 #         # "docs": "/docs",
 #         # "health": "/health"
 #     }
+
+@app.on_event("startup")
+async def startup_event():
+    if os.getenv("ENV") == "local":
+        print("Running local startup tasks...")
+        # seed_data()
+        # connect_db()
+    else:
+        print("Production startup — skipping heavy tasks")
 if __name__ == "__main__":
     import uvicorn
     print("\n" + "="*80)
